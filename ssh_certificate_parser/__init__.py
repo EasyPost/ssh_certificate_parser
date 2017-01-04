@@ -6,6 +6,11 @@ import datetime
 import attr
 
 
+__author__ = 'EasyPost <oss@easypost.com>'
+version_info = (1, 0, 0)
+__version__ = '.'.join(str(s) for s in version_info)
+
+
 class CertType(enum.Enum):
     SSH2_CERT_TYPE_USER = 1
     SSH2_CERT_TYPE_HOST = 2
