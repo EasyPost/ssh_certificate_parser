@@ -8,7 +8,7 @@ import attr
 
 
 __author__ = 'EasyPost <oss@easypost.com>'
-version_info = (1, 0, 0)
+version_info = (1, 1, 0)
 __version__ = '.'.join(str(s) for s in version_info)
 
 

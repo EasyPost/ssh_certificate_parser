@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ssh_certificate_parser",
-    version="1.0",
+    version="1.1.0",
     author="James Brown",
     author_email="jbrown@easypost.com",
     url="https://github.com/easypost/ssh_certificate_parser",
