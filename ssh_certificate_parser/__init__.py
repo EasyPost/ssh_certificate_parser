@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import struct
 import enum
 import datetime
@@ -14,6 +15,23 @@ __version__ = '.'.join(str(s) for s in version_info)
 class CertType(enum.Enum):
     SSH2_CERT_TYPE_USER = 1
     SSH2_CERT_TYPE_HOST = 2
+
+
+@attr.s
+class PublicKey(object):
+    raw = attr.ib()
+
+    @property
+    def fingerprint(self):
+        dgt = hashlib.sha256(self.raw).digest()
+        b64 = base64.standard_b64encode(dgt).decode('ascii')
+        return 'SHA256:{0}'.format(b64.rstrip('='))
+
+
+@attr.s
+class RSAPublicKey(PublicKey):
+    modulus = attr.ib()
+    exponent = attr.ib()
 
 
 def take_u32(byte_array):
@@ -43,6 +61,15 @@ def take_list(byte_array, per_item_callback):
     return l, rest
 
 
+def take_rsa_cert(raw_pubkey, byte_array):
+    modulus_len, byte_array = take_u32(byte_array)
+    modulus = byte_array[:modulus_len]
+    byte_array = byte_array[modulus_len:]
+    exponent_len, byte_array = take_u32(byte_array)
+    exponent = byte_array[:exponent_len]
+    return RSAPublicKey(modulus=modulus, exponent=exponent, raw=raw_pubkey)
+
+
 @attr.s
 class SSHCertificate(object):
     serial = attr.ib()
@@ -58,11 +85,12 @@ class SSHCertificate(object):
 
     def asdict(self):
         dct = attr.asdict(self)
+        del dct['ca']
         dct['valid_after'] = dct['valid_after'].isoformat()
         dct['valid_before'] = dct['valid_before'].isoformat()
         dct['cert_type'] = dct['cert_type'].name
         dct['signature'] = base64.b64encode(dct['signature']).decode('ascii')
-        dct['ca'] = base64.b64encode(dct['ca']).decode('ascii')
+        dct['ca_fingerprint'] = self.ca.fingerprint
         return dct
 
     @classmethod
@@ -90,11 +118,16 @@ class SSHCertificate(object):
         crits, blob = take_list(blob, take_pascal_string)
         exts, blob = take_list(blob, take_pascal_string)
         unknown, blob = take_pascal_bytestring(blob)
-        ca, blob = take_pascal_bytestring(blob)
+        raw_ca, blob = take_pascal_bytestring(blob)
+        ca_cert_type, raw_ca_rest = take_pascal_string(raw_ca)
+        if ca_cert_type == 'ssh-rsa':
+            ca_cert = take_rsa_cert(raw_ca, raw_ca_rest)
+        else:
+            raise ValueError('Unsupported cert type %s' % ca_cert_type)
         signature = blob
         return SSHCertificate(
             serial, cert_type, key_id, principals, valid_after, valid_before,
-            crits, exts, ca, signature
+            crits, exts, ca_cert, signature
         )
 
 
