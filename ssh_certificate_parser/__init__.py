@@ -12,6 +12,22 @@ version_info = (1, 1, 0)
 __version__ = '.'.join(str(s) for s in version_info)
 
 
+class SSHCertificateParserError(Exception):
+    pass
+
+
+@attr.s(frozen=True, hash=True, cmp=True)
+class UnsupportedKeyTypeError(SSHCertificateParserError):
+    """This key has a type which we do not know how to parse"""
+    key_type = attr.ib()
+
+
+@attr.s(frozen=True, cmp=True, hash=True)
+class UnsupportedCertificateTypeError(SSHCertificateParserError):
+    """This key was signed with an unknown certificate algorithm"""
+    cert_type = attr.ib()
+
+
 class CertType(enum.Enum):
     SSH2_CERT_TYPE_USER = 1
     SSH2_CERT_TYPE_HOST = 2
@@ -54,11 +70,11 @@ def take_pascal_string(byte_array):
 
 def take_list(byte_array, per_item_callback):
     overall, rest = take_pascal_bytestring(byte_array)
-    l = []
+    lst = []
     while overall:
         item, overall = per_item_callback(overall)
-        l.append(item)
-    return l, rest
+        lst.append(item)
+    return lst, rest
 
 
 def take_rsa_cert(raw_pubkey, byte_array):
@@ -82,6 +98,8 @@ class SSHCertificate(object):
     exts = attr.ib()
     ca = attr.ib()
     signature = attr.ib()
+    key_type = attr.ib()
+    pubkey_parts = attr.ib()
 
     def asdict(self):
         dct = attr.asdict(self)
@@ -91,6 +109,11 @@ class SSHCertificate(object):
         dct['cert_type'] = dct['cert_type'].name
         dct['signature'] = base64.b64encode(dct['signature']).decode('ascii')
         dct['ca_fingerprint'] = self.ca.fingerprint
+        dct['pubkey_parts'] = dict(
+            (k, base64.b64encode(v).decode('ascii'))
+            for k, v in
+            dct['pubkey_parts'].items()
+        )
         return dct
 
     @classmethod
@@ -101,11 +124,22 @@ class SSHCertificate(object):
             blob = byte_array
         blob = base64.b64decode(blob)
         key_type, blob = take_pascal_string(blob)
-        if key_type != 'ssh-rsa-cert-v01@openssh.com':
-            raise ValueError('Cannot parse certificate of type {0}', key_type)
-        nonce, blob = take_pascal_bytestring(blob)
-        public_n, blob = take_pascal_bytestring(blob)
-        public_e, blob = take_pascal_bytestring(blob)
+        pubkey_parts = {}
+        if key_type == 'ssh-rsa-cert-v01@openssh.com':
+            pubkey_parts['nonce'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['n'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['e'], blob = take_pascal_bytestring(blob)
+        elif key_type == 'ssh-ed25519-cert-v01@openssh.com':
+            pubkey_parts['nonce'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['pubkey'], blob = take_pascal_bytestring(blob)
+        elif key_type == 'ssh-dss-cert-v01@openssh.com':
+            pubkey_parts['nonce'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['p'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['q'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['g'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['pubkey'], blob = take_pascal_bytestring(blob)
+        else:
+            raise UnsupportedKeyTypeError(key_type)
         serial, blob = take_u64(blob)
         cert_type, blob = take_u32(blob)
         cert_type = CertType(cert_type)
@@ -123,11 +157,11 @@ class SSHCertificate(object):
         if ca_cert_type == 'ssh-rsa':
             ca_cert = take_rsa_cert(raw_ca, raw_ca_rest)
         else:
-            raise ValueError('Unsupported cert type %s' % ca_cert_type)
+            raise UnsupportedCertificateTypeError(ca_cert_type)
         signature = blob
         return SSHCertificate(
             serial, cert_type, key_id, principals, valid_after, valid_before,
-            crits, exts, ca_cert, signature
+            crits, exts, ca_cert, signature, key_type, pubkey_parts
         )
 
 
