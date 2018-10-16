@@ -15,7 +15,7 @@ from .parser_helpers import take_list
 
 
 __author__ = 'EasyPost <oss@easypost.com>'
-version_info = (1, 1, 0)
+version_info = (1, 2, 0)
 __version__ = '.'.join(str(s) for s in version_info)
 
 
