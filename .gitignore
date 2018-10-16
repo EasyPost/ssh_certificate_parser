@@ -5,3 +5,6 @@ __pycache__/
 build/
 dist/
 sdist/
+.coverage
+venv/
+env/

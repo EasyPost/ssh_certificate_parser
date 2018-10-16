@@ -1,31 +1,22 @@
 import base64
 import hashlib
-import struct
 import enum
 import datetime
 
 import attr
 
+from .errors import UnsupportedKeyTypeError
+from .errors import UnsupportedCertificateTypeError
+from .parser_helpers import take_u32
+from .parser_helpers import take_u64
+from .parser_helpers import take_pascal_bytestring
+from .parser_helpers import take_pascal_string
+from .parser_helpers import take_list
+
 
 __author__ = 'EasyPost <oss@easypost.com>'
 version_info = (1, 1, 0)
 __version__ = '.'.join(str(s) for s in version_info)
-
-
-class SSHCertificateParserError(Exception):
-    pass
-
-
-@attr.s(frozen=True, hash=True, cmp=True)
-class UnsupportedKeyTypeError(SSHCertificateParserError):
-    """This key has a type which we do not know how to parse"""
-    key_type = attr.ib()
-
-
-@attr.s(frozen=True, cmp=True, hash=True)
-class UnsupportedCertificateTypeError(SSHCertificateParserError):
-    """This key was signed with an unknown certificate algorithm"""
-    cert_type = attr.ib()
 
 
 class CertType(enum.Enum):
@@ -50,33 +41,6 @@ class RSAPublicKey(PublicKey):
     exponent = attr.ib()
 
 
-def take_u32(byte_array):
-    return struct.unpack('!L', byte_array[:4])[0], byte_array[4:]
-
-
-def take_u64(byte_array):
-    return struct.unpack('!Q', byte_array[:8])[0], byte_array[8:]
-
-
-def take_pascal_bytestring(byte_array):
-    string_len, rest = take_u32(byte_array)
-    return rest[:string_len], rest[string_len:]
-
-
-def take_pascal_string(byte_array):
-    string_len, rest = take_u32(byte_array)
-    return rest[:string_len].decode('utf-8'), rest[string_len:]
-
-
-def take_list(byte_array, per_item_callback):
-    overall, rest = take_pascal_bytestring(byte_array)
-    lst = []
-    while overall:
-        item, overall = per_item_callback(overall)
-        lst.append(item)
-    return lst, rest
-
-
 def take_rsa_cert(raw_pubkey, byte_array):
     modulus_len, byte_array = take_u32(byte_array)
     modulus = byte_array[:modulus_len]
@@ -84,6 +48,10 @@ def take_rsa_cert(raw_pubkey, byte_array):
     exponent_len, byte_array = take_u32(byte_array)
     exponent = byte_array[:exponent_len]
     return RSAPublicKey(modulus=modulus, exponent=exponent, raw=raw_pubkey)
+
+
+def utcnow():
+    return datetime.datetime.utcnow()  # pragma: no cover
 
 
 @attr.s
@@ -118,8 +86,8 @@ class SSHCertificate(object):
 
     @classmethod
     def from_bytes(cls, byte_array):
-        if ' ' in byte_array:
-            blob = byte_array.split(' ')[1]
+        if b' ' in byte_array:
+            blob = byte_array.split(b' ')[1]
         else:
             blob = byte_array
         blob = base64.b64decode(blob)
@@ -163,6 +131,14 @@ class SSHCertificate(object):
             serial, cert_type, key_id, principals, valid_after, valid_before,
             crits, exts, ca_cert, signature, key_type, pubkey_parts
         )
+
+    @property
+    def remaining_validity(self):
+        now = utcnow()
+        if now > self.valid_before or now < self.valid_after:
+            return 0
+        else:
+            return (self.valid_before - now).total_seconds()
 
 
 __all__ = ['SSHCertificate']
