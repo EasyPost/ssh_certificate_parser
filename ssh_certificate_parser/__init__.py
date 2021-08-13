@@ -78,7 +78,12 @@ class SSHCertificate(object):
         dct['signature'] = base64.b64encode(dct['signature']).decode('ascii')
         dct['ca_fingerprint'] = self.ca.fingerprint
         dct['pubkey_parts'] = dict(
-            (k, base64.b64encode(v).decode('ascii'))
+            (
+                k,
+                base64.b64encode(v).decode('ascii')
+                if isinstance(v, bytes)
+                else v
+            )
             for k, v in
             dct['pubkey_parts'].items()
         )
@@ -106,6 +111,14 @@ class SSHCertificate(object):
             pubkey_parts['q'], blob = take_pascal_bytestring(blob)
             pubkey_parts['g'], blob = take_pascal_bytestring(blob)
             pubkey_parts['pubkey'], blob = take_pascal_bytestring(blob)
+        elif key_type in (
+            'ecdsa-sha2-nistp256-cert-v01@openssh.com',
+            'ecdsa-sha2-nistp384-cert-v01@openssh.com',
+            'ecdsa-sha2-nistp521-cert-v01@openssh.com'
+        ):
+            pubkey_parts['nonce'], blob = take_pascal_bytestring(blob)
+            pubkey_parts['curve'], blob = take_pascal_string(blob)
+            pubkey_parts['point'], blob = take_pascal_bytestring(blob)
         else:
             raise UnsupportedKeyTypeError(key_type)
         serial, blob = take_u64(blob)
