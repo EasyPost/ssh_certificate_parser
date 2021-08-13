@@ -2,6 +2,8 @@ import datetime
 
 from ssh_certificate_parser import SSHCertificate
 
+import pytest
+
 
 def test_rsa_cert(mocker):
     with open('tests/data/web1_rsa_key-cert.pub', 'rb') as f:
@@ -55,3 +57,21 @@ def test_dsa_cert():
     assert d['cert_type'] == 'SSH2_CERT_TYPE_HOST'
     assert d['crits'] == []
     assert d['exts'] == []
+
+
+@pytest.mark.parametrize('key_size', ['256', '384', '521'])
+def test_ecdsa_cert(key_size):
+    with open('tests/data/web3_{0}_ecdsa_key-cert.pub'.format(key_size), 'rb') as f:
+        cert = SSHCertificate.from_bytes(f.read())
+    assert cert.key_type == 'ecdsa-sha2-nistp{0}-cert-v01@openssh.com'.format(key_size)
+    assert cert.valid_after == datetime.datetime(2021, 8, 12, 9, 2, 3)
+    assert cert.valid_before == datetime.datetime(2022, 8, 14, 7, 59, 59)
+    assert cert.key_id == 'CN=web3,CA=new_ca'
+    assert cert.principals == ['web3', 'web3.example']
+    assert cert.serial == 0
+    d = cert.asdict()
+    assert d['ca_fingerprint'] == 'SHA256:DEGzMMIkpgHKD7EdQr8p9BemrKdzhmTbhFZch4Scx1w'
+    assert d['cert_type'] == 'SSH2_CERT_TYPE_HOST'
+    assert d['crits'] == []
+    assert d['exts'] == []
+    assert d['pubkey_parts']['curve'] == 'nistp{0}'.format(key_size)
