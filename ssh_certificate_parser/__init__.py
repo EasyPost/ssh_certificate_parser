@@ -2,6 +2,8 @@ import base64
 import hashlib
 import enum
 import datetime
+from typing import List
+from pathlib import Path
 
 import attr
 
@@ -12,7 +14,6 @@ from .parser_helpers import take_u64
 from .parser_helpers import take_pascal_bytestring
 from .parser_helpers import take_pascal_string
 from .parser_helpers import take_list
-
 
 __author__ = 'EasyPost <oss@easypost.com>'
 version_info = (1, 2, 0)
@@ -26,6 +27,7 @@ class CertType(enum.Enum):
 
 @attr.s
 class PublicKey(object):
+    """The public key of a CA"""
     raw = attr.ib()
 
     @property
@@ -56,18 +58,18 @@ def utcnow():
 
 @attr.s
 class SSHCertificate(object):
-    serial = attr.ib()
-    cert_type = attr.ib()
-    key_id = attr.ib()
-    principals = attr.ib()
-    valid_after = attr.ib()
-    valid_before = attr.ib()
-    crits = attr.ib()
-    exts = attr.ib()
-    ca = attr.ib()
-    signature = attr.ib()
-    key_type = attr.ib()
-    pubkey_parts = attr.ib()
+    serial: int = attr.ib()
+    cert_type: CertType = attr.ib()
+    key_id: str = attr.ib()
+    principals: List[str] = attr.ib()
+    valid_after: datetime.date = attr.ib()
+    valid_before: datetime.date = attr.ib()
+    crits: List[str] = attr.ib()
+    exts: List[str] = attr.ib()
+    ca: PublicKey = attr.ib()
+    signature: bytes = attr.ib()
+    key_type: str = attr.ib()
+    pubkey_parts: dict = attr.ib()
 
     def asdict(self):
         dct = attr.asdict(self)
@@ -88,6 +90,13 @@ class SSHCertificate(object):
             dct['pubkey_parts'].items()
         )
         return dct
+
+    @classmethod
+    def from_file(cls, path_or_file_object):
+        if isinstance(path_or_file_object, (str, Path)):
+            with open(path_or_file_object, 'rb') as f:
+                return cls.from_file(f)
+        return cls.from_bytes(path_or_file_object.read())
 
     @classmethod
     def from_bytes(cls, byte_array):

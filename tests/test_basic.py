@@ -1,6 +1,7 @@
 import datetime
+from pathlib import Path
 
-from ssh_certificate_parser import SSHCertificate
+from ssh_certificate_parser import SSHCertificate, RSAPublicKey
 
 import pytest
 
@@ -25,6 +26,8 @@ def test_rsa_cert(mocker):
     assert d['cert_type'] == 'SSH2_CERT_TYPE_HOST'
     assert d['crits'] == []
     assert d['exts'] == []
+
+    assert isinstance(cert.ca, RSAPublicKey)
 
 
 def test_ed25519_cert():
@@ -75,3 +78,16 @@ def test_ecdsa_cert(key_size):
     assert d['crits'] == []
     assert d['exts'] == []
     assert d['pubkey_parts']['curve'] == 'nistp{0}'.format(key_size)
+
+
+def test_from_file():
+    path = 'tests/data/web1_ed25519_key-cert.pub'
+    cert = SSHCertificate.from_file(path)
+    assert cert.key_type == 'ssh-ed25519-cert-v01@openssh.com'
+
+    with open(path, 'rb') as f:
+        cert = SSHCertificate.from_file(f)
+        assert cert.key_type == 'ssh-ed25519-cert-v01@openssh.com'
+
+    cert = SSHCertificate.from_file(Path(path))
+    assert cert.key_type == 'ssh-ed25519-cert-v01@openssh.com'

@@ -3,3 +3,15 @@
 ![CI](https://github.com/EasyPost/ssh_certificate_parser/workflows/CI/badge.svg)
 
 This work is licensed under the ISC license, a copy of which can be found at [LICENSE.txt](LICENSE.txt)
+
+## Usage
+
+This module contains a single class, `SSHCertificate`. You can construct it with the `.from_bytes` or `.from_file` classmethods.
+
+```python
+from ssh_certificate_parser import SSHCertificate
+
+cert = SSHCertificate.from_file('/etc/ssh/ssh_host_rsa_key-cert.pub')
+
+remaining_seconds_of_validity = cert.remaining_validity
+```
