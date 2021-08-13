@@ -117,8 +117,7 @@ class SSHCertificate(object):
             'ecdsa-sha2-nistp521-cert-v01@openssh.com'
         ):
             pubkey_parts['nonce'], blob = take_pascal_bytestring(blob)
-            pubkey_parts['curve'], blob = take_pascal_bytestring(blob)
-            pubkey_parts['curve'] = pubkey_parts['curve'].decode('utf-8')
+            pubkey_parts['curve'], blob = take_pascal_string(blob)
             pubkey_parts['point'], blob = take_pascal_bytestring(blob)
         else:
             raise UnsupportedKeyTypeError(key_type)
