@@ -1,8 +1,8 @@
 ChangeLog
 =========
 
-NEXT
-----
+1.3.0
+-----
 - Can now parse ECDSA keys (if they're signed with an RSA CA)
 - Add `.from_file` constructor on `SSHCertificate`
 - Add a bunch of type hints
