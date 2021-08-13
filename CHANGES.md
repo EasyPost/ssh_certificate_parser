@@ -1,7 +1,11 @@
 NEXT
 ====
 - Can now parse ECDSA keys (if they're signed with an RSA CA)
+- Add `.from_file` constructor on `SSHCertificate`
+- Add a bunch of type hints
+- Improve documentation a bit
 
+>>>>>>> 342b205 (add more documentation; add a helpful constructor)
 1.2.0
 =====
 - Can now parse DSA and Ed25519 keys (although they still have to have been signed by an RSA CA)
