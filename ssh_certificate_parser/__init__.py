@@ -58,6 +58,7 @@ def utcnow():
 
 @attr.s
 class SSHCertificate(object):
+    """Representation of a signed SSH certificate"""
     serial: int = attr.ib()
     cert_type: CertType = attr.ib()
     key_id: str = attr.ib()
@@ -72,6 +73,7 @@ class SSHCertificate(object):
     pubkey_parts: dict = attr.ib()
 
     def asdict(self):
+        """Return a dictionary with the important properties of this certificate"""
         dct = attr.asdict(self)
         del dct['ca']
         dct['valid_after'] = dct['valid_after'].isoformat()
@@ -93,6 +95,10 @@ class SSHCertificate(object):
 
     @classmethod
     def from_file(cls, path_or_file_object):
+        """Construct a new SSHCertificate from a path or open file descriptor
+
+        :path_or_file_object: A path or open file object pointing to a valid certifcate
+        """
         if isinstance(path_or_file_object, (str, Path)):
             with open(path_or_file_object, 'rb') as f:
                 return cls.from_file(f)
@@ -100,6 +106,10 @@ class SSHCertificate(object):
 
     @classmethod
     def from_bytes(cls, byte_array):
+        """Construct a new SSHCertificate from a byte array
+
+        :param byte_array: bytestring or equivalent object
+        """
         if b' ' in byte_array:
             blob = byte_array.split(b' ')[1]
         else:
@@ -156,6 +166,7 @@ class SSHCertificate(object):
 
     @property
     def remaining_validity(self):
+        """Number of seconds of remaining validity on this certificate"""
         now = utcnow()
         if now > self.valid_before or now < self.valid_after:
             return 0
@@ -163,4 +174,4 @@ class SSHCertificate(object):
             return (self.valid_before - now).total_seconds()
 
 
-__all__ = ['SSHCertificate']
+__all__ = ['SSHCertificate', 'CertType']
