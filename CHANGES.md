@@ -1,6 +1,10 @@
 ChangeLog
 =========
 
+1.3.3
+-----
+- Fix RtD link issue
+
 1.3.2
 -----
 - Fix PyPI project URLs
