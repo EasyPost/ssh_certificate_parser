@@ -1,6 +1,10 @@
 ChangeLog
 =========
 
+1.3.1
+-----
+- Fix `setup.py` issues
+
 1.3.0
 -----
 - Can now parse ECDSA keys (if they're signed with an RSA CA)
