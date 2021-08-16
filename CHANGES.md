@@ -1,6 +1,10 @@
 ChangeLog
 =========
 
+1.3.2
+-----
+- Fix PyPI project URLs
+
 1.3.1
 -----
 - Fix `setup.py` issues

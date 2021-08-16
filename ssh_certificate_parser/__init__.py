@@ -16,7 +16,7 @@ from .parser_helpers import take_pascal_string
 from .parser_helpers import take_list
 
 __author__ = 'EasyPost <oss@easypost.com>'
-version_info = (1, 3, 1)
+version_info = (1, 3, 2)
 __version__ = '.'.join(str(s) for s in version_info)
 
 

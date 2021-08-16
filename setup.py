@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ssh_certificate_parser",
-    version="1.3.1",
+    version="1.3.2",
     author="James Brown",
     author_email="jbrown@easypost.com",
     url="https://github.com/easypost/ssh_certificate_parser",
@@ -19,8 +19,8 @@ setup(
     ],
     project_urls={
         'Docs': 'https://readthedocs.org/projects/ssh-certificate-parser/',
-        'Tracker': 'https://github.com/EasyPost/ssh-certificate-parser/issues',
-        'Source': 'https://github.com/EasyPost/ssh-certificate-parser',
+        'Tracker': 'https://github.com/EasyPost/ssh_certificate_parser/issues',
+        'Source': 'https://github.com/EasyPost/ssh_certificate_parser',
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
