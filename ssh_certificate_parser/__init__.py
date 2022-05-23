@@ -154,7 +154,7 @@ class SSHCertificate(object):
         unknown, blob = take_pascal_bytestring(blob)
         raw_ca, blob = take_pascal_bytestring(blob)
         ca_cert_type, raw_ca_rest = take_pascal_string(raw_ca)
-        if ca_cert_type == 'ssh-rsa':
+        if ca_cert_type == 'ssh-rsa' or ca_cert_type == 'ecdsa-sha2-nistp384':
             ca_cert = take_rsa_cert(raw_ca, raw_ca_rest)
         else:
             raise UnsupportedCertificateTypeError(ca_cert_type)
