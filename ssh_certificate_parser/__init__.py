@@ -1,22 +1,18 @@
 import base64
-import hashlib
-import enum
 import datetime
-from typing import List
+import enum
+import hashlib
 from pathlib import Path
+from typing import List
 
 import attr
 
-from .errors import UnsupportedKeyTypeError
-from .errors import UnsupportedCertificateTypeError
-from .parser_helpers import take_u32
-from .parser_helpers import take_u64
-from .parser_helpers import take_pascal_bytestring
-from .parser_helpers import take_pascal_string
-from .parser_helpers import take_list
+from .errors import UnsupportedCertificateTypeError, UnsupportedKeyTypeError
+from .parser_helpers import (take_list, take_pascal_bytestring,
+                             take_pascal_string, take_u32, take_u64)
 
 __author__ = 'EasyPost <oss@easypost.com>'
-version_info = (1, 3, 3)
+version_info = (1, 4, 0)
 __version__ = '.'.join(str(s) for s in version_info)
 
 

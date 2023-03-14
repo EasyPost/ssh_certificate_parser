@@ -1,4 +1,5 @@
-pytest==6.*
+flake8==3.9.*
+importlib_metadata<5
 pytest-cov==2.*
 pytest-mock==3.*
-flake8==3.8.*
+pytest==6.*
