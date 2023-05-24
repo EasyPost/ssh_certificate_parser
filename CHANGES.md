@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+1.5.0
+-----
+
+- Adds proper support for `ecdsa-sha2-nistp256`
+
 1.4.0
 -----
 
