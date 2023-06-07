@@ -145,9 +145,9 @@ class SSHCertificate(object):
         valid_after = datetime.datetime.utcfromtimestamp(valid_after)
         valid_before, blob = take_u64(blob)
         # Forever certificate may be large, change to a value that can be handled by CPython
-        far_away = datetime.datetime(year=9999, month=12, day=31)
-        if valid_before > far_away.timestamp()
-            valid_before = far_away
+        max_python_datetime = datetime.datetime(year=9999, month=12, day=31)
+        if valid_before > max_python_datetime.timestamp():
+            valid_before = max_python_datetime
         else:
             valid_before = datetime.datetime.utcfromtimestamp(valid_before)
         crits, blob = take_list(blob, take_pascal_string)
