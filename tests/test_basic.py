@@ -30,6 +30,27 @@ def test_rsa_cert(mocker):
     assert isinstance(cert.ca, RSAPublicKey)
 
 
+def test_forever_cert(mocker):
+    with open('tests/data/web4_rsa_key-cert.pub', 'rb') as f:
+        cert = SSHCertificate.from_bytes(f.read())
+    assert cert.valid_after == datetime.datetime(1970, 1, 1, 0, 0, 0)
+    assert cert.valid_before == datetime.datetime(9999, 12, 31, 0, 0, 0)
+    assert cert.key_id == 'web4'
+    assert cert.principals == ['web4.example.com']
+    assert cert.serial == 0
+    mocker.patch('ssh_certificate_parser.utcnow', return_value=datetime.datetime(1970, 1, 2, 0, 0, 0))
+    assert cert.remaining_validity > 0
+    mocker.patch('ssh_certificate_parser.utcnow', return_value=datetime.datetime(2018, 2, 5, 0, 0, 0))
+    assert cert.remaining_validity > 0
+    mocker.patch('ssh_certificate_parser.utcnow', return_value=datetime.datetime(2099, 3, 8, 0, 0, 0))
+    assert cert.remaining_validity > 0
+    d = cert.asdict()
+    assert d['ca_fingerprint'] == 'SHA256:sZ8QWMpND0GZa8pm3MFNV8nHB2+ssdukl/FyZ49JBgU'
+    assert d['cert_type'] == 'SSH2_CERT_TYPE_USER'
+    assert d['crits'] == []
+    assert d['exts'] == []
+
+
 def test_ed25519_cert():
     with open('tests/data/web1_ed25519_key-cert.pub', 'rb') as f:
         cert = SSHCertificate.from_bytes(f.read())
