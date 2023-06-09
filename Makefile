@@ -44,4 +44,4 @@ release:
 test:
 	$(VIRTUAL_BIN)/pytest
 
-.PHONY: help black black-check build clean coverage docs format format-check install isort isort-check lint mypy publish release scan test
+.PHONY: help build clean coverage install lint publish release test
