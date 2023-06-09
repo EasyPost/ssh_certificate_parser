@@ -18,3 +18,17 @@ remaining_seconds_of_validity = cert.remaining_validity
 ```
 
 Full documentation is at <https://ssh-certificate-parser.readthedocs.io/en/latest/>.
+
+## Development
+
+```sh
+# Install dependencies
+make install
+
+# Lint project
+make lint
+
+# Test project
+make test
+make coverage
+```
